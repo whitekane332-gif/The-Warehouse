@@ -64,19 +64,35 @@
 </footer>
 
 <script>
-  const modeSelect = document.getElementById("mode");
-  const imageInput = document.getElementById("imageInput");
+async function generate() {
+  const prompt = document.getElementById("prompt").value;
+  const result = document.getElementById("result");
 
-  modeSelect.addEventListener("change", () => {
-    imageInput.style.display =
-      modeSelect.value === "image" ? "block" : "none";
-  });
+  result.innerHTML = "<p>Generating image...</p>";
 
-  function generate() {
-    document.getElementById("result").innerHTML =
-      "<p>(Placeholder) Image generation will appear here.</p>";
+  try {
+    const res = await fetch("/api/image-edit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      result.innerHTML = `<pre>Error: ${data.detail || data.error}</pre>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <img src="${data.image}" alt="Generated image" />
+    `;
+  } catch (err) {
+    result.innerHTML = `<pre>Request failed: ${err.message}</pre>`;
   }
+}
 </script>
+
 
 </body>
 </html>
