@@ -13,19 +13,46 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    // ⚠️ 这里的 KEY 来自 Cloudflare 环境变量
-    const API_KEY = env.OPENAI_API_KEY;
+    const API_KEY = env.GEMINI_API_KEY;
 
-    // ===== V0：先 mock（确保链路通）=====
-    const mockResult = {
-      api,
-      prompt,
-      imageName: image.name,
-      output: "This is a mock AI result from Cloudflare Pages Function"
+    // 1️⃣ 把图片转成 base64
+    const arrayBuffer = await image.arrayBuffer();
+    const base64Image = btoa(
+      String.fromCharCode(...new Uint8Array(arrayBuffer))
+    );
+
+    // 2️⃣ 构造 Gemini 请求体
+    const body = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            {
+              inline_data: {
+                mime_type: image.type,
+                data: base64Image
+              }
+            }
+          ]
+        }
+      ]
     };
 
+    // 3️⃣ 调用 Gemini Nano Banana
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }
+    );
+
+    const result = await resp.json();
+
     return new Response(
-      JSON.stringify(mockResult, null, 2),
+      JSON.stringify(result, null, 2),
       { headers: { "Content-Type": "application/json" } }
     );
 
