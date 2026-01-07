@@ -1,59 +1,51 @@
-export async function onRequestPost({ request, env }) {
-  try {
-    const { prompt } = await request.json();
+export async function onRequestPost(context) {
+  const { request, env } = context;
 
-    const res = await fetch(
-      "https://api.openai.com/v1/images/generations",
+  try {
+    const formData = await request.formData();
+    const prompt = formData.get("prompt");
+
+    const openaiResp = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-image-1",
+        prompt,
+        size: "1024x1024",
+      }),
+    });
+
+    const rawText = await openaiResp.text();
+
+    return new Response(
+      JSON.stringify({
+        ok: openaiResp.ok,
+        status: openaiResp.status,
+        openai_raw: rawText,
+      }),
       {
-        method: "POST",
+        status: 200,
         headers: {
-          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "gpt-image-1",
-          prompt,
-          size: "512x512",
-        }),
       }
     );
 
-    // 👇 关键：兜底 OpenAI 错误
-    if (!res.ok) {
-      const text = await res.text();
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          source: "openai",
-          status: res.status,
-          detail: text,
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const data = await res.json();
-
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        image: data.data[0].url,
-      }),
-      { headers: { "Content-Type": "application/json" } }
-    );
   } catch (err) {
     return new Response(
       JSON.stringify({
-        ok: false,
-        source: "function",
-        error: err.message,
+        fatal: true,
+        message: err.message,
+        stack: err.stack,
       }),
       {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
   }
