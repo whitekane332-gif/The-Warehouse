@@ -1,223 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-<meta charset="UTF-8" />
-<title>Orchestrator V0</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <title>Image Orchestrator V0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0f0f12;
-}
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
 
-/* ===== Canvas ===== */
-.canvas {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(#222 1px, transparent 1px);
-  background-size: 24px 24px;
-}
+    h1 {
+      margin-bottom: 4px;
+    }
 
-/* ===== SVG connections ===== */
-svg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
+    .desc {
+      color: #666;
+      margin-bottom: 28px;
+    }
 
-/* ===== Node ===== */
-.node {
-  position: absolute;
-  width: 260px;
-  background: #1c1c22;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  color: #fff;
-}
+    .field {
+      margin-bottom: 18px;
+    }
 
-.node-header {
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  background: #26262e;
-  border-radius: 10px 10px 0 0;
-  cursor: grab;
-}
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
 
-.node-body {
-  padding: 12px;
-  font-size: 13px;
-  color: #ccc;
-}
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+    }
 
-.node textarea {
-  width: 100%;
-  height: 60px;
-  background: #111;
-  border: 1px solid #333;
-  color: #fff;
-  padding: 6px;
-  font-size: 12px;
-  resize: none;
-}
+    textarea {
+      height: 100px;
+    }
 
-.placeholder {
-  height: 80px;
-  border: 1px dashed #444;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #777;
-  font-size: 12px;
-}
+    button {
+      padding: 10px 18px;
+      cursor: pointer;
+      font-size: 14px;
+    }
 
-/* ===== Ports ===== */
-.port {
-  width: 10px;
-  height: 10px;
-  background: #4ade80;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
+    .result {
+      margin-top: 28px;
+      background: #f4f4f4;
+      padding: 14px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
 
-.port.out { right: -5px; }
-.port.in { left: -5px; }
-
-/* ===== Run button ===== */
-.run {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #4ade80;
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* Back link */
-.back {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  color: #aaa;
-  font-size: 13px;
-  text-decoration: none;
-}
-</style>
+    .download {
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Image Orchestrator V0</h1>
+  <p class="desc">
+    上传图片 → 选择 API → 描述需求 → 生成结果
+  </p>
 
-<button class="run" id="run">▶ Run Workflow</button>
-
-<div class="canvas" id="canvas">
-  <svg id="lines"></svg>
-
-  <!-- Task Node -->
-  <div class="node" id="task" style="top:120px; left:120px;">
-    <div class="node-header">📝 Task Input</div>
-    <div class="node-body">
-      <textarea placeholder="Describe the task..."></textarea>
-    </div>
-    <div class="port out"></div>
+  <!-- Image Upload -->
+  <div class="field">
+    <label>上传图片</label>
+    <input type="file" id="image" accept="image/*" />
   </div>
 
-  <!-- Image Node -->
-  <div class="node" id="image" style="top:320px; left:120px;">
-    <div class="node-header">🖼 Image Input</div>
-    <div class="node-body">
-      <div class="placeholder">Drop image here (V0)</div>
-    </div>
-    <div class="port out"></div>
+  <!-- API Select -->
+  <div class="field">
+    <label>选择 API</label>
+    <select id="api">
+      <option value="vision">Vision Model（图像理解）</option>
+      <option value="ocr">OCR（文字识别）</option>
+      <option value="analyze">Image Analysis</option>
+    </select>
   </div>
 
-  <!-- AI Node -->
-  <div class="node" id="ai" style="top:220px; left:480px;">
-    <div class="node-header">🤖 AI Node</div>
-    <div class="node-body">
-      Execute AI workflow<br>
-      <span style="color:#777">(mock execution)</span>
-    </div>
-    <div class="port in"></div>
+  <!-- Prompt -->
+  <div class="field">
+    <label>描述你想让 AI 做什么</label>
+    <textarea id="prompt" placeholder="例如：请描述图片内容，并指出主要元素"></textarea>
   </div>
-</div>
 
-<a class="back" href="/demos/">← Back to Demo Lab</a>
+  <button id="run">生成结果</button>
 
-<script>
-/* ===== Drag logic ===== */
-document.querySelectorAll(".node").forEach(node => {
-  const header = node.querySelector(".node-header");
-  let dragging = false, ox = 0, oy = 0;
+  <!-- Result -->
+  <div id="result" class="result">等待输入…</div>
+  <button id="download" class="download">⬇️ 下载结果</button>
 
-  header.addEventListener("mousedown", e => {
-    dragging = true;
-    ox = e.clientX - node.offsetLeft;
-    oy = e.clientY - node.offsetTop;
-    header.style.cursor = "grabbing";
-  });
+  <script>
+    const runBtn = document.getElementById("run");
+    const resultBox = document.getElementById("result");
+    const downloadBtn = document.getElementById("download");
 
-  document.addEventListener("mousemove", e => {
-    if (!dragging) return;
-    node.style.left = e.clientX - ox + "px";
-    node.style.top = e.clientY - oy + "px";
-    drawLines();
-  });
+    runBtn.onclick = () => {
+      const image = document.getElementById("image").files[0];
+      const api = document.getElementById("api").value;
+      const prompt = document.getElementById("prompt").value.trim();
 
-  document.addEventListener("mouseup", () => {
-    dragging = false;
-    header.style.cursor = "grab";
-  });
-});
+      if (!image || !prompt) {
+        resultBox.textContent = "❗ 请上传图片并填写描述";
+        return;
+      }
 
-/* ===== Draw connections ===== */
-const svg = document.getElementById("lines");
-function drawLines() {
-  svg.innerHTML = "";
-  connect("task", "ai");
-  connect("image", "ai");
-}
+      // 👉 V0：模拟 workflow
+      const workflow = {
+        api,
+        prompt,
+        imageName: image.name
+      };
 
-function connect(fromId, toId) {
-  const from = document.getElementById(fromId);
-  const to = document.getElementById(toId);
-  const a = from.getBoundingClientRect();
-  const b = to.getBoundingClientRect();
+      // mock result
+      const mockResult = {
+        status: "success",
+        api,
+        output: "这是一个模拟的 AI 识别结果",
+        image: image.name
+      };
 
-  const x1 = a.right;
-  const y1 = a.top + a.height / 2;
-  const x2 = b.left;
-  const y2 = b.top + b.height / 2;
+      resultBox.textContent =
+        "▶ 执行请求：\n" +
+        JSON.stringify(workflow, null, 2) +
+        "\n\n▶ 生成结果：\n" +
+        JSON.stringify(mockResult, null, 2);
 
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", `M ${x1} ${y1} C ${x1+80} ${y1}, ${x2-80} ${y2}, ${x2} ${y2}`);
-  path.setAttribute("stroke", "#4ade80");
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke-width", "2");
-
-  svg.appendChild(path);
-}
-
-drawLines();
-
-/* ===== Run mock ===== */
-document.getElementById("run").onclick = () => {
-  alert("✅ Workflow executed (V0 mock)");
-};
-</script>
-
+      // enable download
+      downloadBtn.style.display = "inline-block";
+      downloadBtn.onclick = () => {
+        const blob = new Blob(
+          [JSON.stringify(mockResult, null, 2)],
+          { type: "application/json" }
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "result.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    };
+  </script>
 </body>
 </html>
