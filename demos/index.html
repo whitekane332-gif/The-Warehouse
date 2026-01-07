@@ -2,23 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Demo Lab· The Warehouse</title>
+  <title>Demo Lab · The Warehouse</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/assets/style.css" />
+  <style>
+    .lab {
+      max-width: 960px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .lab-header {
+      margin-bottom: 3rem;
+    }
+
+    .lab-header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .lab-header p {
+      color: #666;
+      max-width: 520px;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .demo-card {
+      display: block;
+      padding: 1.5rem;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .demo-card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+    }
+
+    .demo-card p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .demo-meta {
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      color: #999;
+    }
+  </style>
 </head>
-
 <body>
-  <header class="hero">
-    <h1>🧩Demo Lab</h1>
-    <p class="tagline">
-      This space is under construction.
-    </p>
-  </header>
 
-  <footer>
-    <p>
-      ← <a href="/">Back to The Warehouse</a>
-    </p>
-  </footer>
+  <main class="lab">
+    <header class="lab-header">
+      <h1>Demo Lab</h1>
+      <p>Interactive prototypes and playable ideas.</p>
+    </header>
+
+    <section class="demo-grid">
+
+      <!-- Demo #1 -->
+      <a class="demo-card" href="/demos/orchestrator-v0/">
+        <h3>Orchestrator V0</h3>
+        <p>Early-stage AI workflow orchestration demo.</p>
+        <div class="demo-meta">Status: V0 · First experiment</div>
+      </a>
+
+      <!-- Future demos go here -->
+      <!--
+      <a class="demo-card" href="/demos/your-next-demo/">
+        <h3>Next Demo</h3>
+        <p>Short description.</p>
+        <div class="demo-meta">Status: Prototype</div>
+      </a>
+      -->
+
+    </section>
+  </main>
+
 </body>
 </html>
