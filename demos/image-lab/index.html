@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Lab · The Warehouse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/assets/style.css" />
+  <style>
+    .lab {
+      max-width: 720px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+    textarea, select, input {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 1rem;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<main class="lab">
+  <h1>Image Lab</h1>
+  <p>Text-to-Image and Image-to-Image experiments.</p>
+
+  <label>
+    Mode
+    <select id="mode">
+      <option value="text">Text → Image</option>
+      <option value="image">Image → Image</option>
+    </select>
+  </label>
+
+  <label>
+    API Provider
+    <select id="provider">
+      <option value="openai">OpenAI</option>
+      <option value="other" disabled>Other (Coming soon)</option>
+    </select>
+  </label>
+
+  <label>
+    Prompt
+    <textarea id="prompt" rows="4" placeholder="Describe the image you want..."></textarea>
+  </label>
+
+  <label id="imageInput" style="display:none;">
+    Input Image
+    <input type="file" accept="image/*" />
+  </label>
+
+  <button onclick="generate()">Generate</button>
+
+  <div id="result"></div>
+</main>
+
+<footer>
+  <p>← <a href="/demos/">Back to Demo Lab</a></p>
+</footer>
+
+<script>
+  const modeSelect = document.getElementById("mode");
+  const imageInput = document.getElementById("imageInput");
+
+  modeSelect.addEventListener("change", () => {
+    imageInput.style.display =
+      modeSelect.value === "image" ? "block" : "none";
+  });
+
+  function generate() {
+    document.getElementById("result").innerHTML =
+      "<p>(Placeholder) Image generation will appear here.</p>";
+  }
+</script>
+
+</body>
+</html>
