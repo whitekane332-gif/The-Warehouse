@@ -20,24 +20,16 @@
 <img id="result" style="max-width: 400px;" />
 
 <script>
-const run = document.getElementById("run");
-const image = document.getElementById("image");
-const prompt = document.getElementById("prompt");
-const result = document.getElementById("result");
+  document.getElementById("run").onclick = async () => {
+    const res = await fetch("/api/image-edit", {
+      method: "POST",
+    });
 
-run.onclick = async () => {
-  const fd = new FormData();
-  fd.append("image", image.files[0]);
-  fd.append("prompt", prompt.value);
+    const data = await res.json();
+    console.log("API response:", data);
 
-  const res = await fetch("/api/image-edit", {
-    method: "POST",
-    body: fd
-  });
-
-  const data = await res.json();
-  result.src = data.image;
-};
+    alert("API OK: " + data.message);
+  };
 </script>
 
 </body>
