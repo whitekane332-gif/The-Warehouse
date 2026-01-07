@@ -13,46 +13,60 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    const API_KEY = env.GEMINI_API_KEY;
+    const OPENAI_API_KEY = env.OPENAI_API_KEY;
 
-    // 1️⃣ 把图片转成 base64
+    if (!OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "OPENAI_API_KEY not set" }),
+        { status: 500 }
+      );
+    }
+
+    // 把图片转成 base64
     const arrayBuffer = await image.arrayBuffer();
     const base64Image = btoa(
       String.fromCharCode(...new Uint8Array(arrayBuffer))
     );
 
-    // 2️⃣ 构造 Gemini 请求体
-    const body = {
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: prompt },
-            {
-              inline_data: {
-                mime_type: image.type,
-                data: base64Image
+    // === OpenAI Vision (GPT-4o) ===
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${image.type};base64,${base64Image}`
+                }
               }
-            }
-          ]
-        }
-      ]
-    };
+            ]
+          }
+        ]
+      })
+    });
 
-    // 3️⃣ 调用 Gemini Nano Banana
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      }
-    );
-
-    const result = await resp.json();
+    const result = await response.json();
 
     return new Response(
-      JSON.stringify(result, null, 2),
+      JSON.stringify(
+        {
+          api,
+          prompt,
+          imageName: image.name,
+          result: result.choices?.[0]?.message?.content || "No result"
+        },
+        null,
+        2
+      ),
       { headers: { "Content-Type": "application/json" } }
     );
 
