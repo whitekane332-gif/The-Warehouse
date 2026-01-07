@@ -30,6 +30,11 @@
       font-size: 14px;
     }
 
+    input[type="file"] {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
     button {
       margin-top: 16px;
       padding: 8px 16px;
@@ -62,7 +67,13 @@
     This is a V0 experiment.
   </p>
 
-  <textarea id="input" placeholder="Describe a task you want to orchestrate..."></textarea>
+  <textarea
+    id="input"
+    placeholder="Describe a task you want to orchestrate..."
+  ></textarea>
+
+  <input type="file" id="imageInput" accept="image/*" />
+
   <br />
   <button id="run">Run workflow</button>
 
@@ -73,25 +84,59 @@
   <script>
     const runBtn = document.getElementById("run");
     const input = document.getElementById("input");
+    const imageInput = document.getElementById("imageInput");
     const log = document.getElementById("log");
 
-    runBtn.onclick = () => {
+    runBtn.onclick = async () => {
       const task = input.value.trim();
+      const file = imageInput.files[0];
 
       if (!task) {
         log.textContent = "❗ Please enter a task first.";
         return;
       }
 
+      if (!file) {
+        log.textContent = "❗ Please upload an image.";
+        return;
+      }
+
       log.textContent =
         "▶ Step 1: Receive task\n" +
         `   "${task}"\n\n` +
-        "▶ Step 2: Decompose task\n" +
-        "   - Identify sub-steps\n" +
-        "   - Assign roles\n\n" +
+        "▶ Step 2: Prepare inputs\n" +
+        `   - Image: ${file.name}\n\n` +
         "▶ Step 3: Execute workflow\n" +
-        "   (mock execution)\n\n" +
-        "✅ Done.";
+        "   Calling image model...\n";
+
+      try {
+        const formData = new FormData();
+        formData.append("task", task);
+        formData.append("image", file);
+
+        const res = await fetch("/api/orchestrate-image", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error("Model execution failed");
+        }
+
+        const blob = await res.blob();
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "orchestrated-result.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        log.textContent += "\n✅ Done.\nResult downloaded.";
+      } catch (err) {
+        log.textContent += `\n❌ Error: ${err.message}`;
+      }
     };
   </script>
 </body>
