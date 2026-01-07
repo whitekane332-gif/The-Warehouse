@@ -1,149 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Orchestrator V0</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<title>Orchestrator V0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0f0f12;
-    }
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f0f12;
+}
 
-    /* ===== Canvas ===== */
-    .canvas {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background-image:
-        radial-gradient(#222 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
+/* ===== Canvas ===== */
+.canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(#222 1px, transparent 1px);
+  background-size: 24px 24px;
+}
 
-    /* ===== Node ===== */
-    .node {
-      position: absolute;
-      width: 260px;
-      background: #1c1c22;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      color: #fff;
-      user-select: none;
-    }
+/* ===== SVG connections ===== */
+svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 
-    .node-header {
-      padding: 10px 12px;
-      font-size: 14px;
-      font-weight: 600;
-      background: #26262e;
-      border-radius: 10px 10px 0 0;
-      cursor: grab;
-    }
+/* ===== Node ===== */
+.node {
+  position: absolute;
+  width: 260px;
+  background: #1c1c22;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  color: #fff;
+}
 
-    .node-body {
-      padding: 12px;
-      font-size: 13px;
-      color: #ccc;
-    }
+.node-header {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #26262e;
+  border-radius: 10px 10px 0 0;
+  cursor: grab;
+}
 
-    .node textarea {
-      width: 100%;
-      height: 60px;
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 6px;
-      font-size: 12px;
-      resize: none;
-    }
+.node-body {
+  padding: 12px;
+  font-size: 13px;
+  color: #ccc;
+}
 
-    .node .placeholder {
-      height: 80px;
-      border: 1px dashed #444;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #777;
-      font-size: 12px;
-    }
+.node textarea {
+  width: 100%;
+  height: 60px;
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 6px;
+  font-size: 12px;
+  resize: none;
+}
 
-    /* Back link */
-    .back {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      color: #aaa;
-      font-size: 13px;
-      text-decoration: none;
-    }
-  </style>
+.placeholder {
+  height: 80px;
+  border: 1px dashed #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 12px;
+}
+
+/* ===== Ports ===== */
+.port {
+  width: 10px;
+  height: 10px;
+  background: #4ade80;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.port.out { right: -5px; }
+.port.in { left: -5px; }
+
+/* ===== Run button ===== */
+.run {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #4ade80;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Back link */
+.back {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  color: #aaa;
+  font-size: 13px;
+  text-decoration: none;
+}
+</style>
 </head>
 
 <body>
-  <div class="canvas" id="canvas">
 
-    <!-- Input Node -->
-    <div class="node" style="top: 120px; left: 120px;">
-      <div class="node-header">📝 Task Input</div>
-      <div class="node-body">
-        <textarea placeholder="Describe the task..."></textarea>
-      </div>
+<button class="run" id="run">▶ Run Workflow</button>
+
+<div class="canvas" id="canvas">
+  <svg id="lines"></svg>
+
+  <!-- Task Node -->
+  <div class="node" id="task" style="top:120px; left:120px;">
+    <div class="node-header">📝 Task Input</div>
+    <div class="node-body">
+      <textarea placeholder="Describe the task..."></textarea>
     </div>
-
-    <!-- Image Node -->
-    <div class="node" style="top: 320px; left: 120px;">
-      <div class="node-header">🖼 Image Input</div>
-      <div class="node-body">
-        <div class="placeholder">Drop image here (V0)</div>
-      </div>
-    </div>
-
-    <!-- AI Node -->
-    <div class="node" style="top: 220px; left: 460px;">
-      <div class="node-header">🤖 AI Node</div>
-      <div class="node-body">
-        Execute AI workflow<br />
-        <span style="color:#777">(mock)</span>
-      </div>
-    </div>
-
+    <div class="port out"></div>
   </div>
 
-  <a class="back" href="/demos/">← Back to Demo Lab</a>
+  <!-- Image Node -->
+  <div class="node" id="image" style="top:320px; left:120px;">
+    <div class="node-header">🖼 Image Input</div>
+    <div class="node-body">
+      <div class="placeholder">Drop image here (V0)</div>
+    </div>
+    <div class="port out"></div>
+  </div>
 
-  <script>
-    // ===== Simple drag logic =====
-    document.querySelectorAll(".node").forEach(node => {
-      const header = node.querySelector(".node-header");
+  <!-- AI Node -->
+  <div class="node" id="ai" style="top:220px; left:480px;">
+    <div class="node-header">🤖 AI Node</div>
+    <div class="node-body">
+      Execute AI workflow<br>
+      <span style="color:#777">(mock execution)</span>
+    </div>
+    <div class="port in"></div>
+  </div>
+</div>
 
-      let offsetX = 0;
-      let offsetY = 0;
-      let dragging = false;
+<a class="back" href="/demos/">← Back to Demo Lab</a>
 
-      header.addEventListener("mousedown", e => {
-        dragging = true;
-        offsetX = e.clientX - node.offsetLeft;
-        offsetY = e.clientY - node.offsetTop;
-        header.style.cursor = "grabbing";
-      });
+<script>
+/* ===== Drag logic ===== */
+document.querySelectorAll(".node").forEach(node => {
+  const header = node.querySelector(".node-header");
+  let dragging = false, ox = 0, oy = 0;
 
-      document.addEventListener("mousemove", e => {
-        if (!dragging) return;
-        node.style.left = e.clientX - offsetX + "px";
-        node.style.top = e.clientY - offsetY + "px";
-      });
+  header.addEventListener("mousedown", e => {
+    dragging = true;
+    ox = e.clientX - node.offsetLeft;
+    oy = e.clientY - node.offsetTop;
+    header.style.cursor = "grabbing";
+  });
 
-      document.addEventListener("mouseup", () => {
-        dragging = false;
-        header.style.cursor = "grab";
-      });
-    });
-  </script>
+  document.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    node.style.left = e.clientX - ox + "px";
+    node.style.top = e.clientY - oy + "px";
+    drawLines();
+  });
+
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+    header.style.cursor = "grab";
+  });
+});
+
+/* ===== Draw connections ===== */
+const svg = document.getElementById("lines");
+function drawLines() {
+  svg.innerHTML = "";
+  connect("task", "ai");
+  connect("image", "ai");
+}
+
+function connect(fromId, toId) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
+  const a = from.getBoundingClientRect();
+  const b = to.getBoundingClientRect();
+
+  const x1 = a.right;
+  const y1 = a.top + a.height / 2;
+  const x2 = b.left;
+  const y2 = b.top + b.height / 2;
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", `M ${x1} ${y1} C ${x1+80} ${y1}, ${x2-80} ${y2}, ${x2} ${y2}`);
+  path.setAttribute("stroke", "#4ade80");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke-width", "2");
+
+  svg.appendChild(path);
+}
+
+drawLines();
+
+/* ===== Run mock ===== */
+document.getElementById("run").onclick = () => {
+  alert("✅ Workflow executed (V0 mock)");
+};
+</script>
+
 </body>
 </html>
