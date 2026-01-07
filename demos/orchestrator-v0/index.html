@@ -2,69 +2,43 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>Image Orchestrator V0</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 760px;
-      margin: 40px auto;
-      padding: 0 16px;
-    }
-    h1 { margin-bottom: 4px; }
-    .desc { color: #666; margin-bottom: 28px; }
-    .field { margin-bottom: 18px; }
-    label { display: block; font-size: 14px; margin-bottom: 6px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      font-size: 14px;
-    }
-    textarea { height: 100px; }
-    button {
-      padding: 10px 18px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-  </style>
+  <title>Image Edit MVP</title>
 </head>
-
 <body>
-  <h1>Image Orchestrator V0</h1>
-  <p class="desc">上传图片 → 选择 API → 描述需求 → 生成结果</p>
 
-  <!-- ✅ 核心：原生 form -->
-  <form
-    method="POST"
-    action="/orchestrate-image"
-    enctype="multipart/form-data"
-  >
+<h2>图片编辑 MVP</h2>
 
-    <div class="field">
-      <label>上传图片</label>
-      <input type="file" name="image" accept="image/*" required />
-    </div>
+<input type="file" id="image" accept="image/*" />
+<br /><br />
 
-    <div class="field">
-      <label>选择 API</label>
-      <select name="api">
-        <option value="vision">Vision Model（图像理解）</option>
-        <option value="ocr">OCR（文字识别）</option>
-      </select>
-    </div>
+<textarea id="prompt" placeholder="例如：把蓝天换成白云"></textarea>
+<br /><br />
 
-    <div class="field">
-      <label>描述你想让 AI 做什么</label>
-      <textarea
-        name="prompt"
-        placeholder="例如：请描述图片内容，并指出主要元素"
-        required
-      ></textarea>
-    </div>
+<button id="run" type="button">生成图片</button>
 
-    <button type="submit">生成结果</button>
-  </form>
+<h3>结果：</h3>
+<img id="result" style="max-width: 400px;" />
+
+<script>
+const run = document.getElementById("run");
+const image = document.getElementById("image");
+const prompt = document.getElementById("prompt");
+const result = document.getElementById("result");
+
+run.onclick = async () => {
+  const fd = new FormData();
+  fd.append("image", image.files[0]);
+  fd.append("prompt", prompt.value);
+
+  const res = await fetch("/api/image-edit", {
+    method: "POST",
+    body: fd
+  });
+
+  const data = await res.json();
+  result.src = data.image;
+};
+</script>
 
 </body>
 </html>
