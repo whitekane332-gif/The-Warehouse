@@ -6,195 +6,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    html, body {
       margin: 0;
-      background: #fafafa;
-      color: #111;
-    }
-
-    header {
-      padding: 24px 32px;
-      border-bottom: 1px solid #e5e5e5;
-      background: #fff;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.6rem;
-    }
-
-    header p {
-      margin: 4px 0 0;
-      color: #666;
-      font-size: 0.9rem;
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 24px;
-      padding: 32px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .panel {
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .panel h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      margin-bottom: 12px;
-    }
-
-    textarea {
+      padding: 0;
       width: 100%;
-      height: 100px;
-      padding: 10px;
-      font-size: 14px;
-      box-sizing: border-box;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f12;
     }
 
-    input[type="file"] {
-      margin-top: 12px;
-      font-size: 14px;
+    /* ===== Canvas ===== */
+    .canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-image:
+        radial-gradient(#222 1px, transparent 1px);
+      background-size: 24px 24px;
     }
 
-    button {
-      margin-top: 16px;
-      padding: 10px 14px;
-      font-size: 14px;
-      cursor: pointer;
+    /* ===== Node ===== */
+    .node {
+      position: absolute;
+      width: 260px;
+      background: #1c1c22;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      color: #fff;
+      user-select: none;
     }
 
-    .log {
-      font-family: monospace;
-      white-space: pre-wrap;
+    .node-header {
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #26262e;
+      border-radius: 10px 10px 0 0;
+      cursor: grab;
+    }
+
+    .node-body {
+      padding: 12px;
       font-size: 13px;
-      background: #f6f6f6;
-      padding: 14px;
-      border-radius: 8px;
-      min-height: 160px;
+      color: #ccc;
     }
 
-    .result {
-      margin-top: 16px;
+    .node textarea {
+      width: 100%;
+      height: 60px;
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 6px;
+      font-size: 12px;
+      resize: none;
     }
 
-    .result img {
-      max-width: 100%;
-      border-radius: 8px;
-      border: 1px solid #ddd;
+    .node .placeholder {
+      height: 80px;
+      border: 1px dashed #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
+      font-size: 12px;
     }
 
-    footer {
-      padding: 24px 32px;
-      font-size: 14px;
+    /* Back link */
+    .back {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #aaa;
+      font-size: 13px;
+      text-decoration: none;
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <h1>Orchestrator V0</h1>
-    <p>Image workflow orchestration · V0 experiment</p>
-  </header>
+  <div class="canvas" id="canvas">
 
-  <main class="workspace">
-    <!-- Input Panel -->
-    <section class="panel">
-      <h2>Input</h2>
+    <!-- Input Node -->
+    <div class="node" style="top: 120px; left: 120px;">
+      <div class="node-header">📝 Task Input</div>
+      <div class="node-body">
+        <textarea placeholder="Describe the task..."></textarea>
+      </div>
+    </div>
 
-      <textarea
-        id="input"
-        placeholder="Describe what you want the image model to do..."
-      ></textarea>
+    <!-- Image Node -->
+    <div class="node" style="top: 320px; left: 120px;">
+      <div class="node-header">🖼 Image Input</div>
+      <div class="node-body">
+        <div class="placeholder">Drop image here (V0)</div>
+      </div>
+    </div>
 
-      <input type="file" id="imageInput" accept="image/*" />
+    <!-- AI Node -->
+    <div class="node" style="top: 220px; left: 460px;">
+      <div class="node-header">🤖 AI Node</div>
+      <div class="node-body">
+        Execute AI workflow<br />
+        <span style="color:#777">(mock)</span>
+      </div>
+    </div>
 
-      <button id="run">Run workflow</button>
-    </section>
+  </div>
 
-    <!-- Workflow / Output Panel -->
-    <section class="panel">
-      <h2>Workflow</h2>
-
-      <div id="log" class="log">Waiting for input…</div>
-
-      <div id="result" class="result"></div>
-    </section>
-  </main>
-
-  <footer>
-    ← <a href="/demos/">Back to Demo Lab</a>
-  </footer>
+  <a class="back" href="/demos/">← Back to Demo Lab</a>
 
   <script>
-    const runBtn = document.getElementById("run");
-    const input = document.getElementById("input");
-    const imageInput = document.getElementById("imageInput");
-    const log = document.getElementById("log");
-    const result = document.getElementById("result");
+    // ===== Simple drag logic =====
+    document.querySelectorAll(".node").forEach(node => {
+      const header = node.querySelector(".node-header");
 
-    runBtn.onclick = async () => {
-      const task = input.value.trim();
-      const file = imageInput.files[0];
+      let offsetX = 0;
+      let offsetY = 0;
+      let dragging = false;
 
-      if (!task) {
-        log.textContent = "❗ Please enter a task.";
-        return;
-      }
+      header.addEventListener("mousedown", e => {
+        dragging = true;
+        offsetX = e.clientX - node.offsetLeft;
+        offsetY = e.clientY - node.offsetTop;
+        header.style.cursor = "grabbing";
+      });
 
-      if (!file) {
-        log.textContent = "❗ Please upload an image.";
-        return;
-      }
+      document.addEventListener("mousemove", e => {
+        if (!dragging) return;
+        node.style.left = e.clientX - offsetX + "px";
+        node.style.top = e.clientY - offsetY + "px";
+      });
 
-      result.innerHTML = "";
-      log.textContent =
-        "▶ Step 1: Receive task\n" +
-        `"${task}"\n\n` +
-        "▶ Step 2: Attach image\n" +
-        `${file.name}\n\n` +
-        "▶ Step 3: Call image model...\n";
-
-      try {
-        const formData = new FormData();
-        formData.append("task", task);
-        formData.append("image", file);
-
-        const res = await fetch("/api/orchestrate-image", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error("Model execution failed");
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-        log.textContent += "\n✅ Done.";
-
-        const img = document.createElement("img");
-        img.src = url;
-
-        const download = document.createElement("a");
-        download.href = url;
-        download.download = "orchestrated-result.png";
-        download.textContent = "Download result";
-
-        result.appendChild(img);
-        result.appendChild(document.createElement("br"));
-        result.appendChild(download);
-      } catch (err) {
-        log.textContent += `\n❌ Error: ${err.message}`;
-      }
-    };
+      document.addEventListener("mouseup", () => {
+        dragging = false;
+        header.style.cursor = "grab";
+      });
+    });
   </script>
 </body>
 </html>
