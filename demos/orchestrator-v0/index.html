@@ -21,16 +21,20 @@
 
 <script>
   document.getElementById("run").onclick = async () => {
+    const prompt = document.getElementById("prompt").value;
+
     const res = await fetch("/api/image-edit", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     });
 
     const data = await res.json();
-    console.log("API response:", data);
 
-    alert("API OK: " + data.message);
+    document.getElementById("result").src = data.image;
   };
 </script>
+
 
 </body>
 </html>
